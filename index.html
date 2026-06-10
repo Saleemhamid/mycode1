@@ -461,110 +461,38 @@
         <button class="btn-pdf" onclick="buildAbsolutePDF()">حفظ وتحميل الـ PDF النهائي المضمون 100%</button>
     </div>
 
-    <script>
-        function processForm(event) {
-            event.preventDefault();
-
-            const certNo = document.getElementById('cNo').value;
-
-            // 1. تعبئة بيانات جدول الصفحة الأولى التقليدية
-            document.getElementById('lCertNo').innerText = certNo;
-            document.getElementById('lCertPlace').innerText = document.getElementById('cPlace').value;
-            document.getElementById('lExpiryDate').innerText = document.getElementById('cExpiryDate').value;
-            document.getElementById('lName').innerText = document.getElementById('cName').value;
-            document.getElementById('lIdNo').innerText = document.getElementById('cIdNo').value;
-            document.getElementById('lGender').innerText = document.getElementById('cGender').value;
-            document.getElementById('lNat').innerText = document.getElementById('cNat').value;
-            document.getElementById('lJob').innerText = document.getElementById('cJob').value;
+ <script>
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('view') === 'page3') {
+        // 1. إخفاء نموذج إدخال البيانات والأزرار تماماً
+        const setupContainer = document.querySelector('.container'); 
+        if(setupContainer) setupContainer.style.display = 'none';
         
-            // 2. تعبئة بيانات كارد الصفحة الثالثة
-            document.getElementById('vCertNo').innerText = certNo;
-            document.getElementById('vIssueDate').innerText = document.getElementById('cIssueDate').value;
-            document.getElementById('vExpiryDate').innerText = document.getElementById('cExpiryDate').value;
-            document.getElementById('vName').innerText = document.getElementById('cName').value;
-            document.getElementById('vIdNo').innerText = document.getElementById('cIdNo').value;
-            document.getElementById('vGender').innerText = document.getElementById('cGender').value;
-            document.getElementById('vNat').innerText = document.getElementById('cNat').value;
-            document.getElementById('vJob').innerText = document.getElementById('cJob').value;
-            document.getElementById('vProg').innerText = document.getElementById('cProg').value;
-            document.getElementById('vProgExp').innerText = document.getElementById('cProgExp').value;
-            document.getElementById('vFacName').innerText = document.getElementById('cFacName').value;
-            document.getElementById('vFacLic').innerText = document.getElementById('cFacLic').value;
+        // 2. تعبئة البيانات المستقبلة في الصفحة الثالثة مباشرة
+        if(document.getElementById('outName')) document.getElementById('outName').innerText = urlParams.get('name') || '';
+        if(document.getElementById('outFacility')) document.getElementById('outFacility').innerText = urlParams.get('facility') || '';
+        if(document.getElementById('outLic')) document.getElementById('outLic').innerText = urlParams.get('lic') || '';
+        if(document.getElementById('outJob')) document.getElementById('outJob').innerText = urlParams.get('job') || '';
+        if(document.getElementById('outProg')) document.getElementById('outProg').innerText = urlParams.get('prog') || '';
+        if(document.getElementById('outProgExp')) document.getElementById('outProgExp').innerText = urlParams.get('exp') || '';
+        if(document.getElementById('outFacName')) document.getElementById('outFacName').innerText = urlParams.get('facName') || '';
+        if(document.getElementById('outFacLic')) document.getElementById('outFacLic').innerText = urlParams.get('facLic') || '';
 
-            // 3. التعديل الجوهري: توليد رابط داخلي ينزل مباشرة لصفحة بيانات بلدي (الصفحة الثالثة) دون خطأ 404
-            document.getElementById("outQrImg").innerHTML = "";
-            
-            // الرابط يشير لوسم الصفحة الثالثة في نفس الملف المحلي عندك
-            const localTrackingUrl = "https://saleemhamid.github.io/mycode1/";
-
-            new QRCode(document.getElementById("outQrImg"), {
-                text: localTrackingUrl,
-                width: 115,
-                height: 115,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
-
-            // 4. معالجة وتمرير الصور المرفوعة
-            const mapping = [
-                { input: 'inHeaderImg', view1: 'outHeaderImg1', view3: 'outHeaderImg3' },
-                { input: 'inUserImg', view1: 'outUserImg1', view3: 'outUserImg3' }
-            ];
-
-            let loadedCount = 0;
-            mapping.forEach(item => {
-                const file = document.getElementById(item.input).files[0];
-                if(file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        if(item.view1) document.getElementById(item.view1).src = e.target.result;
-                        if(item.view3) document.getElementById(item.view3).src = e.target.result;
-                        
-                        loadedCount++;
-                        if(loadedCount === 2) {
-                            document.getElementById('inputFormContainer').style.display = 'none';
-                            document.getElementById('previewWrapper').style.display = 'block';
-                            document.getElementById('controlPanel').style.display = 'block';
-                        }
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
+        // 3. إظهار الصفحة الثالثة فقط (صفحة الشهادة)
+        const page3 = document.getElementById('page3') || document.querySelector('.page3') || document.querySelector('.preview-container');
+        if(page3) {
+            page3.style.display = 'block';
+            page3.style.margin = '0 auto';
         }
-
-        async function buildAbsolutePDF() {
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: [116, 166]
-            });
-
-            const p1 = document.getElementById('page1');
-            const p2 = document.getElementById('page2');
-            const p3 = document.getElementById('page3');
-            const filename = document.getElementById('cNo').value;
-
-            const opts = { scale: 4, useCORS: true, logging: false, backgroundColor: '#ffffff' };
-
-            try {
-                const c1 = await html2canvas(p1, opts);
-                pdf.addImage(c1.toDataURL('image/png'), 'PNG', 0, 0, 116, 166);
-
-                pdf.addPage([116, 166], 'portrait');
-                const c2 = await html2canvas(p2, opts);
-                pdf.addImage(c2.toDataURL('image/png'), 'PNG', 0, 0, 116, 166);
-
-                pdf.addPage([116, 166], 'portrait');
-                const c3 = await html2canvas(p3, opts);
-                pdf.addImage(c3.toDataURL('image/png'), 'PNG', 0, 0, 116, 166);
-
-                pdf.save('Balady_Final_Form_' + filename + '.pdf');
-            } catch (err) {
-                alert('حدث خطأ أثناء إعداد المستند الإلكتروني، يرجى إعادة المحاولة.');
-            }
-        }
-    </script>
+        
+        // إخفاء أي صفحات معاينة أخرى غير مطلوبة للمراقب
+        const page1 = document.getElementById('page1') || document.querySelector('.page1');
+        const page2 = document.getElementById('page2') || document.querySelector('.page2');
+        if(page1) page1.style.display = 'none';
+        if(page2) page2.style.display = 'none';
+    }
+});
+</script>
 </body>
 </html>
